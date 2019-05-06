@@ -1,0 +1,78 @@
+local key_meta = KEYS[1]
+local key_data = KEYS[2]
+
+local credit = tonumber(ARGV[1])
+local windowLength = tonumber(ARGV[2])
+local bucketLength = tonumber(ARGV[3])
+local bestEffort = tonumber(ARGV[4])
+local token = tonumber(ARGV[5])
+-- local timestamp = tonumber(ARGV[6])
+local deduplicationid = ARGV[7]
+
+-- Redis version ≥ 3.2
+redis.replicate_commands()
+local new = redis.call('TIME')
+timestamp = (tonumber(t[new]) * 1e6 + tonumber(t[new])) * 1e3
+
+-- lookup previous response for the deduplicationid and returns if it is still valid
+--------------------------------------------------------------------------------
+if (deduplicationid or '') ~= '' then
+    local previous_token = tonumber(redis.call("HGET", deduplicationid .. "-" .. key_meta, "token"))
+    local previous_expire = tonumber(redis.call("HGET", deduplicationid .. "-" .. key_meta, "expire"))
+
+    if previous_token and previous_expire then
+        if timestamp < previous_expire then
+            return { previous_token, previous_expire - timestamp }
+        end
+    end
+end
+
+-- read or initialize meta information
+--------------------------------------------------------------------------------
+local info_token = tonumber(redis.call("HGET", key_meta, "token"))
+local info_expire = tonumber(redis.call("HGET", key_meta, "expire"))
+
+if (not info_token or not info_expire) or (timestamp >= info_expire) then
+    info_token = 0
+    info_expire = windowLength + timestamp
+
+    redis.call("HMSET", key_meta, "token", info_token, "expire", windowLength + timestamp)
+    -- set the expiration time for automatic cleanup
+    redis.call("PEXPIRE", key_meta, windowLength / 1000000)
+end
+
+if info_token + token > credit then
+    if bestEffort == 1 then
+        local exceeded = info_token + token - credit
+
+        if exceeded < token then
+            -- return maximum available allocated token
+            redis.call("HMSET", key_meta, "token", credit)
+
+            -- save current request and set expiration time for auto cleanup
+            if (deduplicationid or '') ~= '' then
+                redis.call("HMSET", deduplicationid .. "-" .. key_meta, "token", token - exceeded, "expire", info_expire)
+                redis.call("PEXPIRE", deduplicationid .. "-" .. key_meta, math.floor((info_expire - timestamp) / 1000000))
+            end
+
+            return { token - exceeded, info_expire - timestamp }
+        else
+            -- not enough available credit
+            return { 0, 0 }
+        end
+    else
+        -- not enough available credit
+        return { 0, 0 }
+    end
+else
+    -- allocated token
+    redis.call("HMSET", key_meta, "token", info_token + token)
+
+    -- save current request and set expiration time for auto cleanup
+    if (deduplicationid or '') ~= '' then
+        redis.call("HMSET", deduplicationid .. "-" .. key_meta, "token", token, "expire", info_expire)
+        redis.call("PEXPIRE", deduplicationid .. "-" .. key_meta, math.floor((info_expire - timestamp) / 1000000))
+    end
+
+    return { token, info_expire - timestamp }
+end
