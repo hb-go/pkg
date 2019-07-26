@@ -35,7 +35,7 @@ local utime = tonumber(now[1])
 local utimeMicro = tonumber(now[2])
 local timestamp = (utime * 1e6 + utimeMicro) * 1e3
 local udur = math.floor(windowLength / 1e9)
-local slot = math.floor(utime / udur)
+local slot = tostring(math.floor(utime / udur))
 
 -- lookup previous response for the deduplicationid and returns if it is still valid
 if (deduplicationid or '') ~= '' then

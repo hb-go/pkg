@@ -6,8 +6,13 @@ local windowLength = tonumber(ARGV[2])
 local bucketLength = tonumber(ARGV[3])
 local bestEffort = tonumber(ARGV[4])
 local token = tonumber(ARGV[5])
-local timestamp = tonumber(ARGV[6])
+-- local timestamp = tonumber(ARGV[6])
 local deduplicationid = ARGV[7]
+
+-- Redis version ≥ 3.2
+redis.replicate_commands()
+local now = redis.call('TIME')
+timestamp = (tonumber(now[1]) * 1e6 + tonumber(now[2])) * 1e3
 
 -- lookup previous response for the deduplicationid and returns if it is still valid
 --------------------------------------------------------------------------------
@@ -84,7 +89,7 @@ end
 -- update the expiration time for automatic cleanup
 --------------------------------------------------------------------------------
 redis.call("PEXPIRE", key_meta, windowLength / 1000000)
-redis.call("PEXPIRE", key_meta, windowLength / 1000000)
+redis.call("PEXPIRE", key_data, windowLength / 1000000)
 
 -- calculate available token
 --------------------------------------------------------------------------------

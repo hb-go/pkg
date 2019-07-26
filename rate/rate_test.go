@@ -11,6 +11,7 @@ import (
 var (
 	limiterSet       *Limiter
 	limiterHset      *Limiter
+	limiterRolling   *Limiter
 	limiterRedisRate *redis_rate.Limiter
 )
 
@@ -27,6 +28,12 @@ func init() {
 		Addr(addr),
 		Password(pwd),
 		Window(WindowFixedHSET),
+	)
+
+	limiterRolling = NewLimiter(
+		Addr(addr),
+		Password(pwd),
+		Window(WindowRolling),
 	)
 
 	ring := redis.NewRing(&redis.RingOptions{
@@ -55,7 +62,11 @@ func TestLimiter_Hset(t *testing.T) {
 }
 
 func TestLimiter_Rolling(t *testing.T) {
-
+	for i := 0; i < 15; i++ {
+		time.Sleep(time.Millisecond * 200)
+		allocated, expiration, allow := limiterRolling.AllowN("TestLimiter_Rolling", 10, time.Second*3, 1, "")
+		t.Logf("allocated:%d, expiration:%v, allow:%v", allocated, expiration, allow)
+	}
 }
 
 func TestLimiter_RedisRate(t *testing.T) {
@@ -68,7 +79,7 @@ func TestLimiter_RedisRate(t *testing.T) {
 func BenchmarkLimiter_Set(b *testing.B) {
 	b.Logf("N:%d", b.N)
 	for i := 0; i < b.N; i++ {
-		allocated, expiration, allow := limiterSet.AllowN("BenchmarkLimiter_Set", 5, time.Second, 1, "")
+		allocated, expiration, allow := limiterSet.AllowN("BenchmarkLimiter_Set", 100, time.Second, 1, "")
 		b.Logf("allocated:%d, expiration:%v, allow:%v", allocated, expiration, allow)
 	}
 }
@@ -76,7 +87,15 @@ func BenchmarkLimiter_Set(b *testing.B) {
 func BenchmarkLimiter_Hset(b *testing.B) {
 	b.Logf("N:%d", b.N)
 	for i := 0; i < b.N; i++ {
-		allocated, expiration, allow := limiterHset.AllowN("BenchmarkLimiter_Hset", 5, time.Second, 1, "")
+		allocated, expiration, allow := limiterHset.AllowN("BenchmarkLimiter_Hset", 100, time.Second, 1, "")
+		b.Logf("allocated:%d, expiration:%v, allow:%v", allocated, expiration, allow)
+	}
+}
+
+func BenchmarkLimiter_Rolling(b *testing.B) {
+	b.Logf("N:%d", b.N)
+	for i := 0; i < b.N; i++ {
+		allocated, expiration, allow := limiterRolling.AllowN("BenchmarkLimiter_Rolling", 100, time.Second*3, 1, "")
 		b.Logf("allocated:%d, expiration:%v, allow:%v", allocated, expiration, allow)
 	}
 }
@@ -84,7 +103,7 @@ func BenchmarkLimiter_Hset(b *testing.B) {
 func BenchmarkLimiter_RedisRate(b *testing.B) {
 	b.Logf("N:%d", b.N)
 	for i := 0; i < b.N; i++ {
-		c, d, a := limiterRedisRate.AllowN("BenchmarkLimiter_RedisRate", 5, time.Second, 1)
+		c, d, a := limiterRedisRate.AllowN("BenchmarkLimiter_RedisRate", 100, time.Second, 1)
 		b.Logf("count:%d, depay:%v, allow:%v", c, d, a)
 	}
 }
