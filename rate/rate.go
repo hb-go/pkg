@@ -2,8 +2,9 @@ package rate
 
 import (
 	"fmt"
-	"github.com/go-redis/redis"
 	"time"
+
+	"github.com/go-redis/redis"
 )
 
 var (
@@ -21,7 +22,7 @@ type Limiter struct {
 	opts *Options
 }
 
-func NewLimiter(opt ... Option) *Limiter {
+func NewLimiter(opt ...Option) *Limiter {
 	opts := DefaultOptions()
 	for _, o := range opt {
 		o(opts)
