@@ -1,9 +1,9 @@
 package dispatcher
 
 import (
-	"log"
-
 	"github.com/hashicorp/go-multierror"
+
+	"github.com/hb-go/pkg/log"
 )
 
 const queueAllocSize = 64
@@ -29,7 +29,7 @@ func (s *session) clear() {
 	for !exit {
 		select {
 		case <-s.completed:
-			log.Printf("Leaked dispatch state discovered!")
+			log.Warn("leaked dispatch state discovered!")
 			continue
 		default:
 			exit = true

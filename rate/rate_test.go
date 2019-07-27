@@ -1,11 +1,12 @@
 package rate
 
 import (
+	"testing"
+	"time"
+
 	"github.com/go-redis/redis"
 	"github.com/go-redis/redis_rate"
 	"golang.org/x/time/rate"
-	"testing"
-	"time"
 )
 
 var (
