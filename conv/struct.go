@@ -4,6 +4,7 @@ import (
 	"reflect"
 )
 
+// TODO map、slice等支持
 // 使用reflect实现struct同名字段转换，支持Struct、Ptr迭代
 func StructToStruct(src, dst interface{}) {
 	s := reflect.ValueOf(src).Elem()
