@@ -1,6 +1,6 @@
 module github.com/hb-go/pkg
 
-go 1.12
+go 1.15
 
 require (
 	github.com/BurntSushi/toml v0.3.1
@@ -9,8 +9,9 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.7.0
 	github.com/fsnotify/fsnotify v1.4.9
-	github.com/go-redis/redis v6.15.3+incompatible
-	github.com/go-redis/redis_rate v6.5.0+incompatible
+	github.com/go-redis/redis v0.0.0-20190503082931-75795aa4236d
+	github.com/go-redis/redis_rate v0.0.0-20170905141804-31124b3ea0f4
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/uuid v1.2.0
 	github.com/hashicorp/go-multierror v1.0.0
@@ -20,7 +21,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1
 	github.com/onsi/ginkgo v1.14.0 // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/patrickmn/go-cache v0.0.0-20170722040110-a3647f8e31d7
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/urfave/cli/v2 v2.3.0
